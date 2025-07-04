@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InterviewAIAgentAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250704074059_init")]
+    [Migration("20250704134212_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -25,22 +25,21 @@ namespace InterviewAIAgentAPI.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("InterviewAIAgentAPI.Models.CandidateResume", b =>
+            modelBuilder.Entity("InterviewAIAgentAPI.Models.CandidateSubmission", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("CandidateId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
+                    b.Property<string>("CandidateFullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -48,14 +47,14 @@ namespace InterviewAIAgentAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ResumeText")
+                    b.PrimitiveCollection<string>("Questions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("TotalYearsExperience")
+                        .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("CandidateId");
 
                     b.ToTable("Candidates");
                 });
