@@ -124,61 +124,34 @@ namespace InterviewAIAgentAPI.Controllers
             var apiKey = _configuration["OpenAI:ApiKey"];
             _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
 
-//            //            var prompt = $@"
-//            //You are an expert technical interviewer and resume parser.
-//            //Given the following CV content and {yearsOfExperience} years of experience, generate exactly 5 technical interview questions as a JSON array under the property 'Questions'.
-
-//            //CV Content:
-//            //{cvContent}
-//            //";
-//            var prompt = $@"
-//You are an expert technical interviewer and resume parser.
-//Given the following CV content, first determine the candidate's total years of professional experience from the CV. 
-//Then, based on the extracted years of experience and the CV content, generate exactly 5 technical interview questions as a JSON array under the property 'Questions'.
-//Return only the JSON object with the 'Questions' property. Do not include the years of experience or any other properties in the output.
-
-//CV Content:
-//{cvContent}
-//";
-
-//            var requestBody = new
-//            {
-//                model = "gpt-4.1-mini-2025-04-14",
-//                messages = new[]
-//                {
-//            new { role = "system", content = "You extract structured data from resumes and generate technical interview questions." },
-//            new { role = "user", content = prompt }
-//        }
-//            };
-
             // Build the prompt dynamically based on whether description is provided
-    var promptBuilder = new StringBuilder();
-    promptBuilder.AppendLine("You are an expert technical interviewer and resume parser.");
-    promptBuilder.AppendLine("Given the following CV content" + (string.IsNullOrWhiteSpace(description) ? "" : " and candidate description") + ", first determine the candidate's total years of professional experience from the CV.");
-    promptBuilder.AppendLine("Then, based on the extracted years of experience, the CV content" + (string.IsNullOrWhiteSpace(description) ? "" : ", and the description") + ", generate exactly 5 technical interview questions as a JSON array under the property 'Questions'.");
-    promptBuilder.AppendLine("Ensure that each question covers a different technology, framework, or skill area mentioned in the CV (do not focus all questions on a single technology).");
-    promptBuilder.AppendLine("Return only the JSON object with the 'Questions' property. Do not include the years of experience or any other properties in the output.");
-    promptBuilder.AppendLine();
-    promptBuilder.AppendLine("CV Content:");
-    promptBuilder.AppendLine(cvContent);
-    if (!string.IsNullOrWhiteSpace(description))
-    {
-        promptBuilder.AppendLine();
-        promptBuilder.AppendLine("Description:");
-        promptBuilder.AppendLine(description);
-    }
+            var promptBuilder = new StringBuilder();
+            promptBuilder.AppendLine("You are an expert technical interviewer and resume parser.");
+            promptBuilder.AppendLine("Given the following CV content" + (string.IsNullOrWhiteSpace(description) ? "" : " and candidate description") + ", first determine the candidate's total years of professional experience from the CV.");
+            promptBuilder.AppendLine("Then, based on the extracted years of experience, the CV content" + (string.IsNullOrWhiteSpace(description) ? "" : ", and the description") + ", generate exactly 5 technical interview questions as a JSON array under the property 'Questions'.");
+            promptBuilder.AppendLine("Ensure that each question covers a different technology, framework, or skill area mentioned in the CV (do not focus all questions on a single technology).");
+            promptBuilder.AppendLine("Return only the JSON object with the 'Questions' property. Do not include the years of experience or any other properties in the output.");
+            promptBuilder.AppendLine();
+            promptBuilder.AppendLine("CV Content:");
+            promptBuilder.AppendLine(cvContent);
+            if (!string.IsNullOrWhiteSpace(description))
+            {
+                promptBuilder.AppendLine();
+                promptBuilder.AppendLine("Description:");
+                promptBuilder.AppendLine(description);
+            }
 
-    var prompt = promptBuilder.ToString();
+            var prompt = promptBuilder.ToString();
 
-    var requestBody = new
-    {
-        model = "gpt-4.1-mini-2025-04-14",
-        messages = new[]
-        {
+            var requestBody = new
+            {
+                model = "gpt-4.1-mini-2025-04-14",
+                messages = new[]
+                {
             new { role = "system", content = "You extract structured data from resumes and generate technical interview questions." },
             new { role = "user", content = prompt }
         }
-    };
+            };
 
             var jsonContent = new StringContent(
                 JsonSerializer.Serialize(requestBody),
