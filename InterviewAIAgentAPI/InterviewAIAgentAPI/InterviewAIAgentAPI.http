@@ -1,0 +1,6 @@
+@InterviewAIAgentAPI_HostAddress = http://localhost:5087
+
+GET {{InterviewAIAgentAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

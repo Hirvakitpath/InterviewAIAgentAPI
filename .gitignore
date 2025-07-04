@@ -1,0 +1,40 @@
+# .NET Core (InterviewAIAgentAPI)
+bin/
+obj/
+*.csproj.user
+.vs/
+*.pdb
+*.exe
+*.dll
+*.suo
+*.cache
+*.log
+appsettings.Development.json
+*.msi
+*.msix
+*.nupkg
+
+# Angular (InterviewAIAgentUI)
+node_modules/
+dist/
+*.log
+.angular/
+*.tsbuildinfo
+e2e/*.js
+e2e/*.map
+coverage/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment Files
+.env
+*.env.*
+!.env.example
+
+# OS-Specific Files
+.DS_Store
+Thumbs.db 
