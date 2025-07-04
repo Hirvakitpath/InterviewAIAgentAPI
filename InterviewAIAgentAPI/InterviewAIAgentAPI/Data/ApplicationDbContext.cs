@@ -9,7 +9,7 @@ namespace InterviewAIAgentAPI.Data
             : base(options)
         {
         }
-        public DbSet<CandidateResume> Candidates { get; set; }
+        public DbSet<CandidateSubmission> Candidates { get; set; }
         //public DbSet<Interview> Interviews { get; set; }
         //public DbSet<Question> Questions { get; set; }
 
