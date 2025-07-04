@@ -26,65 +26,97 @@ namespace InterviewAIAgentAPI.Controllers
         [HttpPost("add-candidate-with-cv")]
         public async Task<IActionResult> AddCandidateWithCV([FromForm] CandidateSubmission candidateSubmission)
         {
-            if (candidateSubmission == null || candidateSubmission.CV == null || candidateSubmission.CV.Length == 0)
+            try
             {
-                return BadRequest("Candidate submission or CV file is required.");
+                if (candidateSubmission == null || candidateSubmission.CV == null || candidateSubmission.CV.Length == 0)
+                {
+                    return BadRequest("Candidate submission or CV file is required.");
+                }
+
+                candidateSubmission.CandidateId = Guid.NewGuid();
+
+                // Read CV file into memory
+                using (var memoryStream = new MemoryStream())
+                {
+                    await candidateSubmission.CV.CopyToAsync(memoryStream);
+                    candidateSubmission.CVData = memoryStream.ToArray();
+                }
+
+                // Extract text from PDF
+                string cvContent;
+                try
+                {
+                    cvContent = await ExtractTextFromPdf(candidateSubmission.CVData);
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest($"Error extracting text from PDF: {ex.Message}");
+                }
+
+                // Get questions from OpenAI
+                List<string> questions;
+                try
+                {
+                    questions = await GetQuestionsFromOpenAI(cvContent, candidateSubmission.Description);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Error generating questions from OpenAI: {ex.Message}");
+                }
+
+                // Assign questions to candidate
+                candidateSubmission.Questions = questions;
+
+                // Remove CV file from model before saving to DB
+                candidateSubmission.CV = null;
+
+                // Save candidate to DB
+                try
+                {
+                    _dbContext.Candidates.Add(candidateSubmission);
+                    await _dbContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Error saving candidate to database: {ex.Message}");
+                }
+
+                return Ok(new
+                {
+                    candidateSubmission.CandidateId,
+                    candidateSubmission.CandidateFullName,
+                    candidateSubmission.Questions,
+                    Message = "Candidate added successfully with questions."
+                });
             }
-
-            // Save the uploaded CV temporarily
-            //var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
-            //Directory.CreateDirectory(uploadsDir);
-            //var filePath = Path.Combine(uploadsDir, Guid.NewGuid() + Path.GetExtension(candidateSubmission.CV.FileName));
-            //using (var stream = new FileStream(filePath, FileMode.Create))
-            //{
-            //    await candidateSubmission.CV.CopyToAsync(stream);
-            //}
-
-            var filePath = @"D:\PDFs\React_Developer_Resume_John_Doe.pdf"; // Update this path
-
-            // Extract text from PDF
-            string cvContent = await ExtractTextFromPdf(filePath);
-
-            // Get questions from OpenAI
-            var questions = await GetQuestionsFromOpenAI(cvContent, candidateSubmission.Description);
-
-            // Assign questions to candidate
-            candidateSubmission.Questions = questions;
-
-            // Remove CV file from model before saving to DB
-            candidateSubmission.CV = null;
-
-            // Save candidate to DB
-            _dbContext.Candidates.Add(candidateSubmission);
-            await _dbContext.SaveChangesAsync();
-
-            //    // Clean up temporary file
-            //    if (System.IO.File.Exists(filePath))
-            //    {
-            //        System.IO.File.Delete(filePath);
-            //    }
-
-            return Ok(new
+            catch (Exception ex)
             {
-                candidateSubmission.CandidateId,
-                candidateSubmission.CandidateFullName,
-                candidateSubmission.Questions,
-                Message = "Candidate added successfully with questions."
-            });
+                // Log the exception (you should use your logging framework here)
+                // _logger.LogError(ex, "Unexpected error in AddCandidateWithCV");
+
+                return StatusCode(500, "An unexpected error occurred while processing the candidate submission.");
+            }
         }
-        private async Task<string> ExtractTextFromPdf(string filePath)
+
+        private async Task<string> ExtractTextFromPdf(byte[] pdfData)
         {
             var text = new StringBuilder();
-            using (var pdfReader = new PdfReader(filePath))
+            try
             {
-                for (int page = 1; page <= pdfReader.NumberOfPages; page++)
+                using (var pdfReader = new PdfReader(pdfData))
                 {
-                    text.Append(PdfTextExtractor.GetTextFromPage(pdfReader, page));
+                    for (int page = 1; page <= pdfReader.NumberOfPages; page++)
+                    {
+                        text.Append(PdfTextExtractor.GetTextFromPage(pdfReader, page));
+                    }
                 }
+                return await Task.FromResult(text.ToString());
             }
-            return await Task.FromResult(text.ToString());
-            //// Placeholder: Replace with actual PDF parsing logic using iTextSharp or PdfSharp
-            //return await Task.FromResult("Sample CV text with technologies like C#, ASP.NET, skills like Problem Solving, and projects.");
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., invalid PDF)
+                return await Task.FromResult($"Error extracting text from PDF: {ex.Message}");
+            }
         }
 
         private async Task<List<string>> GetQuestionsFromOpenAI(string cvContent, string description)
