@@ -5,5 +5,6 @@
         public string AccountSid { get; set; }
         public string ApiKeySid { get; set; }
         public string ApiKeySecret { get; set; }
+        public string AuthToken { get; set; }
     }
 }

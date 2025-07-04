@@ -5,7 +5,6 @@ using InterviewAIAgentAPI.Models;
 using iTextSharp.text.pdf;
 using iTextSharp.text.pdf.parser;
 using InterviewAIAgentAPI.Data;
-using Path = System.IO.Path;
 
 namespace InterviewAIAgentAPI.Controllers
 {
