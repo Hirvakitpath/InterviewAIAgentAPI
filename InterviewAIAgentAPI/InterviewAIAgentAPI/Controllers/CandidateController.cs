@@ -53,19 +53,30 @@ namespace InterviewAIAgentAPI.Controllers
                     return BadRequest($"Error extracting text from PDF: {ex.Message}");
                 }
 
+                var predefinedQuestions = new List<string>
+                {
+                    "What is your total years of experience?",
+                    "How many years of relevant experience do you have apart from internship?",
+                    "What is your expected CTC?",
+                    "What is your current CTC?",
+                    "What is your notice period?",
+                    "Why are you looking to change your job?",
+                    "Where are you currently located?",
+                    "What are your core skills or technical stack?"
+                };
+
                 // Get questions from OpenAI
-                List<string> questions;
+                List<string> aiQuestions;
+
                 try
                 {
-                    questions = await GetQuestionsFromOpenAI(cvContent, candidateSubmission.Description);
+                    aiQuestions = await GetQuestionsFromOpenAI(cvContent, candidateSubmission.Description);
                 }
                 catch (Exception ex)
                 {
                     return StatusCode(500, $"Error generating questions from OpenAI: {ex.Message}");
                 }
-
-                // Assign questions to candidate
-                candidateSubmission.Questions = questions;
+                candidateSubmission.Questions = predefinedQuestions.Concat(aiQuestions).ToList();
 
                 // Remove CV file from model before saving to DB
                 candidateSubmission.CV = null;
